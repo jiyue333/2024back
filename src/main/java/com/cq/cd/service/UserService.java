@@ -15,4 +15,7 @@ public interface UserService extends IService<User> {
 	Boolean authlogin(User user);
 
 	User getuserbyName(String username);
+
+
+	Integer gettodayUser();
 }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,7 +74,7 @@ public class MessageController {
      * 更新消息信息
      * @param message 消息对象
      * @return ApiResult 更新结果
-     */
+    */
     @PutMapping("/")
     public ApiResult update(@RequestBody Message message) {
         boolean res = messageService.updateById(message);
@@ -86,16 +87,17 @@ public class MessageController {
     }
 
     /**
-     * 添加新消息
+     * 发送消息
      * @param message 消息对象
      * @return ApiResult 添加结果
      */
     @PostMapping("/")
-    public ApiResult add(@RequestBody Message message) {
+    public ApiResult sendmessage(@RequestBody Message message) {
         boolean res = messageService.save(message);
         Map<String, Object> data = new HashMap<>();
         data.put("success", res);
-        if (res) {
+        if (res && message.getSenderId() != null && message.getReceiveId() != null) {
+            message.setSendTime(LocalDate.now());
             return ApiResult.buildApiResult(200, "添加成功", data);
         } else {
             return ApiResult.buildApiResult(400, "添加失败", data);

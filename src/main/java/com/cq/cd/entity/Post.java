@@ -17,4 +17,5 @@ public class Post {
 	private LocalDate lastEditData;
 	private Integer clickNumber;
 	private Integer commentNumber;
+	private Boolean status;
 }

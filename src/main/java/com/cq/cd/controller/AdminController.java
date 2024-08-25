@@ -2,12 +2,16 @@ package com.cq.cd.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cq.cd.entity.Post;
 import com.cq.cd.entity.User;
+import com.cq.cd.service.PostService;
 import com.cq.cd.service.UserService;
 import com.cq.cd.util.ApiResult;
+import com.cq.cd.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +25,9 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PostService postService;
 
     /**
      * 分页查询所有用户
@@ -38,13 +45,13 @@ public class AdminController {
     }
 
     /**
-     * 根据用户ID查询用户详情
-     * @param userId 用户ID
+     * 根据用户名称查询用户详情
+     * @param username 用户名称
      * @return ApiResult 查询结果
      */
-    @GetMapping("/users/{userId}")
-    public ApiResult findById(@PathVariable("userId") Integer userId) {
-        User res = userService.getById(userId);
+    @GetMapping("/users/{username}")
+    public ApiResult findById(@PathVariable("username") String username) {
+        User res = userService.getuserbyName(username);
         Map<String, Object> data = new HashMap<>();
         if (res != null) {
             data.put("user", res);
@@ -55,13 +62,14 @@ public class AdminController {
     }
 
     /**
-     * 根据用户ID删除用户
-     * @param userId 用户ID
+     * 根据用户名称删除用户
+     * @param username 用户名称
      * @return ApiResult 删除结果
      */
-    @DeleteMapping("/users/{userId}")
-    public ApiResult deleteById(@PathVariable("userId") Integer userId) {
-        boolean res = userService.removeById(userId);
+    @DeleteMapping("/users/{username}")
+    public ApiResult deleteById(@PathVariable("username") String username) {
+        User user = userService.getuserbyName(username);
+        boolean res = userService.removeById(user.getUserId());
         Map<String, Object> data = new HashMap<>();
         data.put("success", res);
         if (res) {
@@ -95,6 +103,7 @@ public class AdminController {
      */
     @PostMapping("/users")
     public ApiResult add(@RequestBody User user) {
+        user.setUserCreatedData(LocalDate.now());
         boolean res = userService.save(user);
         Map<String, Object> data = new HashMap<>();
         data.put("success", res);
@@ -107,16 +116,11 @@ public class AdminController {
 
     /**
      * 更新用户密码
-     * @param user 用户对象，必须包含ID、新密码和权限码
+     * @param user 用户对象，必须包含名称和密码
      * @return ApiResult 更新结果
      */
     @PutMapping("/password")
     public ApiResult updatePwd(@RequestBody User user) {
-        // 验证权限码
-        if (!"1111".equals(user.getPermissionCode())) {
-            return ApiResult.buildApiResult(403, "权限码无效", null);
-        }
-
         // 更新密码
         int res = userService.updatePwd(user);
         if (res >= 0) {
@@ -124,5 +128,63 @@ public class AdminController {
         } else {
             return ApiResult.buildApiResult(400, "密码更新失败", null);
         }
+    }
+
+    /**
+     * 通过内容
+     * @param  postId 帖子的id
+     * @return ApiResult 更新结果
+     */
+    @PutMapping("/approve")
+    public ApiResult approve(@RequestParam Integer postId) {
+        Post post = postService.getById(postId);
+        if (post != null) {
+            post.setStatus(true);
+            return ApiResult.buildApiResult(200, "密码更新成功", null);
+        } else {
+            return ApiResult.buildApiResult(400, "密码更新失败", null);
+        }
+    }
+
+    /**
+     * 更新帖子信息
+     * @param post 帖子对象
+     * @return ApiResult 更新结果
+     */
+    @PutMapping("/update")
+    public ApiResult update(@RequestBody Post post) {
+        boolean res = postService.updateById(post);
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", res);
+        if (res) {
+            return ApiResult.buildApiResult(200, "更新成功", data);
+        }
+        return ApiResult.buildApiResult(400, "更新失败", data);
+    }
+
+    /**
+     * 管理用户登录
+     * @param user 用户对象，必须包含用户名和密码
+     * @return ApiResult 登录结果
+     */
+    @PostMapping("/auth/login")
+    public ApiResult authLogin(@RequestBody User user) {
+        if (userService.authlogin(user)) {
+            String token = JwtTokenUtil.generateToken(user.getUserName());
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("token", token);
+            return ApiResult.buildApiResult(200, "认证登录成功", resultMap);
+        } else {
+            return ApiResult.buildApiResult(401, "认证登录失败", null);
+        }
+    }
+
+    /**
+     * 获取用户总数
+     * @return ApirResult 返回结果
+     */
+    @GetMapping("/count")
+    public Long getUserCount() {
+        return userService.count();
     }
 }

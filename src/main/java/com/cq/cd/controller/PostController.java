@@ -85,72 +85,43 @@ public class PostController {
     }
 
     /**
-     * 根据帖子ID删除帖子
-     * @param postId 帖子ID
-     * @return ApiResult 删除结果
-     */
-    @DeleteMapping("/{postId}")
-    public ApiResult deleteById(@PathVariable("postId") Integer postId) {
-        boolean res = postService.removeById(postId);
-        Map<String, Object> data = new HashMap<>();
-        data.put("success", res);
-        return ApiResult.buildApiResult(200, "删除成功", data);
-    }
-
-    /**
-     * 更新帖子信息
+     * 添加新帖子
      * @param post 帖子对象
-     * @return ApiResult 更新结果
+     * @param boardName 板块名称
+     * @param userName 用户名称
+     * @return ApiResult 添加结果
      */
-    @PutMapping("/")
-    public ApiResult update(@RequestBody Post post) {
-        boolean res = postService.updateById(post);
+    @PostMapping("/add")
+    public ApiResult add(@RequestBody Post post, @RequestParam String boardName, @RequestParam String userName) {
+        // 查找板块ID
+        Board board = boardService.getboardbyName(boardName);
+        if (board == null) {
+            return ApiResult.buildApiResult(400, "指定的板块不存在", null);
+        }
+
+        // 查找用户ID
+        User user = userService.getuserbyName(userName);
+        if (user == null) {
+            return ApiResult.buildApiResult(400, "指定的用户不存在", null);
+        }
+
+        // 设置板块ID和用户ID到帖子中
+        post.setPlateId(board.getPlateId());
+        post.setUserId(user.getUserId());
+
+        // 设置帖子创建时间
+        post.setPostCreatedData(LocalDate.now());
+
+        // 保存帖子
+        boolean res = postService.save(post);
         Map<String, Object> data = new HashMap<>();
         data.put("success", res);
         if (res) {
-            return ApiResult.buildApiResult(200, "更新成功", data);
+            return ApiResult.buildApiResult(200, "添加成功", data);
+        } else {
+            return ApiResult.buildApiResult(400, "添加失败", data);
         }
-        return ApiResult.buildApiResult(400, "更新失败", data);
     }
-
-/**
- * 添加新帖子
- * @param post 帖子对象
- * @param boardName 板块名称
- * @param userName 用户名称
- * @return ApiResult 添加结果
- */
-@PostMapping("/")
-public ApiResult add(@RequestBody Post post, @RequestParam String boardName, @RequestParam String userName) {
-    // 查找板块ID
-    Board board = boardService.getboardbyName(boardName);
-    if (board == null) {
-        return ApiResult.buildApiResult(400, "指定的板块不存在", null);
-    }
-
-    // 查找用户ID
-    User user = userService.getuserbyName(userName);
-    if (user == null) {
-        return ApiResult.buildApiResult(400, "指定的用户不存在", null);
-    }
-
-    // 设置板块ID和用户ID到帖子中
-    post.setPlateId(board.getPlateId());
-    post.setUserId(user.getUserId());
-
-    // 设置帖子创建时间
-    post.setPostCreatedData(LocalDate.now());
-
-    // 保存帖子
-    boolean res = postService.save(post);
-    Map<String, Object> data = new HashMap<>();
-    data.put("success", res);
-    if (res) {
-        return ApiResult.buildApiResult(200, "添加成功", data);
-    } else {
-        return ApiResult.buildApiResult(400, "添加失败", data);
-    }
-}
 
     /**
      * 根据标题或内容模糊查询帖子

@@ -17,10 +17,13 @@ public interface UserMapper extends BaseMapper<User> {
 	})
 	User selectAllReviews(Integer userId);
 
-	@Update("update users set passWord = #{passWord} where userId = #{userId}")
+	@Update("update users set passWord = #{passWord} where userName = #{userName}")
 	int Updatepwd(User user);
 
 
 	@Select("Select * from plate where userName = #{username}")
 	User getuserbyName(String username);
+
+	@Select("select count(*) from users where DATE(userCreatedData)= CURDATE()")
+	Integer gettodayUser();
 }

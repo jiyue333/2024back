@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cq.cd.service.EmailService;
+import com.cq.cd.service.PostService;
 import com.cq.cd.util.ApiResult;
 import com.cq.cd.entity.User;
 import com.cq.cd.service.UserService;
@@ -30,6 +31,9 @@ public class UserController {
 
     @Autowired
     private EmailController emailController;
+
+    @Autowired
+    private PostService postService;
 
     /**
      * 分页查询所有用户
@@ -152,14 +156,7 @@ public class UserController {
         return userService.selectAllReviews(userId);
     }
 
-    /**
-     * 测试获取所有用户
-     * @return List<User> 用户列表
-     */
-    @GetMapping("/test")
-    public List<User> getUser() {
-        return userService.list();
-    }
+
 
     /**
      * 用户登录
@@ -175,23 +172,6 @@ public class UserController {
             return ApiResult.buildApiResult(200, "登录成功", resultMap);
         } else {
             return ApiResult.buildApiResult(401, "登录失败", null);
-        }
-    }
-
-    /**
-     * 用户认证登录
-     * @param user 用户对象，必须包含用户名和密码
-     * @return ApiResult 登录结果
-     */
-    @PostMapping("/auth/login")
-    public ApiResult authLogin(@RequestBody User user) {
-        if (userService.authlogin(user)) {
-            String token = JwtTokenUtil.generateToken(user.getUserName());
-            Map<String, Object> resultMap = new HashMap<>();
-            resultMap.put("token", token);
-            return ApiResult.buildApiResult(200, "认证登录成功", resultMap);
-        } else {
-            return ApiResult.buildApiResult(401, "认证登录失败", null);
         }
     }
 
@@ -219,4 +199,29 @@ public class UserController {
         resultMap.put("token", token);
         return ApiResult.buildApiResult(200, "注册成功", resultMap);
     }
+
+
+    /**
+     * 根据帖子ID删除帖子
+     * @param postId 帖子ID
+     * @return ApiResult 删除结果
+     */
+    @DeleteMapping("/delete/{postId}")
+    public ApiResult deletePostById(@PathVariable("postId") Integer postId) {
+        boolean res = postService.removeById(postId);
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", res);
+        return ApiResult.buildApiResult(200, "删除成功", data);
+    }
+
+    /**
+     * 获取今日注册用户
+     * @return ApiResult 返回数据
+     */
+    @GetMapping("/today")
+    public ApiResult testtime(){
+        Integer count =  userService.gettodayUser();
+        return  ApiResult.success().data("count", count);
+    }
+
 }

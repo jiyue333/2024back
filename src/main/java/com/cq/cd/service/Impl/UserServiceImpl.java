@@ -82,4 +82,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 	public User getuserbyName(String username) {
 		return userMapper.getuserbyName(username);
 	}
+
+	@Override
+	public Integer gettodayUser() {
+		return userMapper.gettodayUser();
+	}
 }

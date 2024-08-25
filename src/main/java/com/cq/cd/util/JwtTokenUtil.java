@@ -34,14 +34,14 @@ public class JwtTokenUtil {
 
 	// 验证JWT的有效性
     // 验证JWT并返回状态
-    public static String validateToken(String token) {
+    public static Boolean validateToken(String token) {
         try {
             Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
-            return "valid"; // 如果验证通过，返回valid
+            return true; // 如果验证通过，返回valid
         } catch (ExpiredJwtException e) {
-            return "expired"; // 如果令牌已过期，返回expired
+            return false;// 如果令牌已过期，返回expired
         } catch (JwtException e) {
-            return "invalid"; // 如果令牌无效，返回invalid
+            return false; // 如果令牌无效，返回invalid
         }
     }
 

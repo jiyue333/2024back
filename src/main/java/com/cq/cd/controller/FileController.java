@@ -11,8 +11,6 @@ import java.io.IOException;
 //status = 500 后端异常
 @RestController
 public class FileController {
-
-
 	private static final String UPLOAD_FOLDER = "D:\\mavenProject\\mavenproject820\\src\\main\\resources\\static\\upload";
 
 	@PostMapping("/upload")
@@ -25,15 +23,16 @@ public class FileController {
 		String path = request.getServletContext().getRealPath("/upload/");
 		System.out.println(path);
 		saveFile(photo, path);
+		//todo 返回访问路径
 		return "上传成功";
 	}
 
 	public void saveFile(MultipartFile photo, String path) throws IOException {
-		File up_Dir = new File(UPLOAD_FOLDER);
+		File up_Dir = new File(path);
 		if(!up_Dir.exists()){
 			up_Dir.mkdir();
 		}
-		File file = new File(UPLOAD_FOLDER + File.separator +photo.getOriginalFilename());
+		File file = new File(path + photo.getOriginalFilename());
 		photo.transferTo(file);
 	}
 }
