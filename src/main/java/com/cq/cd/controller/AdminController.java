@@ -2,9 +2,12 @@ package com.cq.cd.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cq.cd.entity.Board;
 import com.cq.cd.entity.Post;
 import com.cq.cd.entity.User;
+import com.cq.cd.service.BoardService;
 import com.cq.cd.service.PostService;
+import com.cq.cd.service.ReviewService;
 import com.cq.cd.service.UserService;
 import com.cq.cd.util.ApiResult;
 import com.cq.cd.util.JwtTokenUtil;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +25,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/admin")
+@CrossOrigin
 public class AdminController {
 
     @Autowired
@@ -29,8 +34,15 @@ public class AdminController {
     @Autowired
     private PostService postService;
 
+    @Autowired
+    private ReviewService reviewService;
+    @Autowired
+    private BoardService boardService;
+
+
     /**
      * 分页查询所有用户
+     *
      * @param page 当前页码
      * @param size 每页大小
      * @return ApiResult 分页结果
@@ -130,21 +142,6 @@ public class AdminController {
         }
     }
 
-    /**
-     * 通过内容
-     * @param  postId 帖子的id
-     * @return ApiResult 更新结果
-     */
-    @PutMapping("/approve")
-    public ApiResult approve(@RequestParam Integer postId) {
-        Post post = postService.getById(postId);
-        if (post != null) {
-            post.setStatus(true);
-            return ApiResult.buildApiResult(200, "密码更新成功", null);
-        } else {
-            return ApiResult.buildApiResult(400, "密码更新失败", null);
-        }
-    }
 
     /**
      * 更新帖子信息
@@ -181,10 +178,82 @@ public class AdminController {
 
     /**
      * 获取用户总数
+     *
      * @return ApirResult 返回结果
      */
-    @GetMapping("/count")
+    @GetMapping("/usercount")
     public Long getUserCount() {
         return userService.count();
+    }
+
+    /**
+     * 获取评论总数
+     *
+     * @return ApirResult 返回结果
+     */
+    @GetMapping("/postcount")
+    public Long getReviewCount() {
+        return reviewService.count();
+    }
+
+
+    /**
+     * 根据用户ID删除用户
+     *
+     * @param userId 用户ID
+     * @return ApiResult 删除结果
+     */
+    @DeleteMapping("/{userId}")
+    public ApiResult deleteById(@PathVariable("userId") Integer userId) {
+        boolean res = userService.removeById(userId);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("success", res);
+        return ApiResult.buildApiResult(200, "删除成功", resultMap);
+    }
+
+    /**
+     * 返回所有帖子
+     *
+     * @return 帖子集合
+     */
+    @GetMapping("/getall")
+    public ApiResult getallpost() {
+        List<Post> list = postService.list();
+        return ApiResult.success().data("postList", list);
+    }
+
+
+    /**
+     * 分页查询所有帖子
+     *
+     * @param page 当前页码
+     * @param size 每页大小
+     * @return ApiResult 分页结果
+     */
+    @GetMapping("/post/{page}/{size}")
+    public ApiResult findpost(@PathVariable Integer page, @PathVariable Integer size) {
+        Page<Post> postPage = new Page<>(page, size);
+        IPage<Post> res = postService.page(postPage);
+        Map<String, Object> data = new HashMap<>();
+        data.put("users", res);
+        return ApiResult.buildApiResult(200, "分页查询所有帖子", data);
+    }
+
+
+    /**
+     * 更新板块信息
+     *
+     * @param board 帖子对象
+     * @return ApiResult 更新结果
+     */
+    @PutMapping("/updateboard")
+    public ApiResult updateboard(@RequestBody Board board) {
+        boolean res = boardService.updateById(board);
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", res);
+        if (res) {
+            return ApiResult.buildApiResult(200, "更新成功", data);
+        }
+        return ApiResult.buildApiResult(400, "更新失败", data);
     }
 }

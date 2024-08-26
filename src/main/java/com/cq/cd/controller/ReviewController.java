@@ -3,13 +3,11 @@ package com.cq.cd.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cq.cd.util.ApiResult;
 import com.cq.cd.entity.Review;
 import com.cq.cd.service.ReviewService;
 import com.cq.cd.util.ApiResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/review")  // 标准化路由映射
+@CrossOrigin
 public class ReviewController {
     @Autowired
     private ReviewService reviewService;

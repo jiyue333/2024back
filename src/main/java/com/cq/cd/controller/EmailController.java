@@ -2,23 +2,23 @@ package com.cq.cd.controller;
 
 
 import com.cq.cd.service.EmailService;
-import com.cq.cd.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 @RestController
+@CrossOrigin
 public class EmailController {
 
 	@Autowired
@@ -38,7 +38,7 @@ public class EmailController {
 	}
 
 	@PostMapping("/code")
-	public ResponseEntity<String> sendMessageToEmail(@RequestParam("email") String email) {
+	public ResponseEntity<String> sendMessageToEmail(@RequestParam(required = true) String email) {
 		if (email == null || email.trim().isEmpty()) {
 			return ResponseEntity.badRequest().body("邮箱为空");
 		}

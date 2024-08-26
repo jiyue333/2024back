@@ -1,9 +1,6 @@
 package com.cq.cd.interceptor;
 
-import com.cq.cd.util.JwtTokenUtil;
-import org.apache.ibatis.plugin.Interceptor;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,7 +25,6 @@ public class LoginInterceptor implements HandlerInterceptor {
 //            return false;
 //        }
 
-        // token 验证通过，继续执行后续的处理
         return true;
     }
 	//default 可以在接口提供默认实现

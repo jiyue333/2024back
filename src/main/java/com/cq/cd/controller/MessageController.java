@@ -2,16 +2,16 @@ package com.cq.cd.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cq.cd.util.ApiResult;
 import com.cq.cd.entity.Message;
+import com.cq.cd.entity.User;
 import com.cq.cd.service.MessageService;
 import com.cq.cd.util.ApiResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,6 +20,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/message")
+@CrossOrigin
 public class MessageController {
 
     @Autowired
@@ -88,7 +89,8 @@ public class MessageController {
 
     /**
      * 发送消息
-     * @param message 消息对象
+     *
+     * @param message 消息对象 必须包含发送者和接收者ID
      * @return ApiResult 添加结果
      */
     @PostMapping("/")
@@ -97,10 +99,47 @@ public class MessageController {
         Map<String, Object> data = new HashMap<>();
         data.put("success", res);
         if (res && message.getSenderId() != null && message.getReceiveId() != null) {
-            message.setSendTime(LocalDate.now());
+            message.setSendTime(LocalDateTime.now());
             return ApiResult.buildApiResult(200, "添加成功", data);
         } else {
             return ApiResult.buildApiResult(400, "添加失败", data);
+        }
+    }
+
+    /**
+     * 根据用户ID获取接收的用户集合
+     *
+     * @param userId 用户ID
+     * @return ApiResult 用户集合
+     */
+    @GetMapping("/receive/{userId}")
+    public ApiResult getMessagesByUserId(@PathVariable("userId") Integer userId) {
+        List<User> senderlist = messageService.findSenderByUserId(userId);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("senderlist", senderlist);
+        if (senderlist != null && !senderlist.isEmpty()) {
+            return ApiResult.buildApiResult(200, "获取消息成功", resultMap);
+        } else {
+            return ApiResult.buildApiResult(404, "没有找到消息", null);
+        }
+    }
+
+    /**
+     * 获取与某个用户的所有私信内容
+     *
+     * @param userId   用户ID
+     * @param senderId 发送者ID
+     * @return ApiResult 私信内容集合
+     */
+    @GetMapping("/conversation")
+    public ApiResult getAllMessagesWithUser(Integer userId, Integer senderId) {
+        List<Message> messages = messageService.findAllMessagesWithUser(userId, senderId);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("messages", messages);
+        if (messages != null && !messages.isEmpty()) {
+            return ApiResult.buildApiResult(200, "获取私信内容成功", resultMap);
+        } else {
+            return ApiResult.buildApiResult(404, "没有找到私信内容", null);
         }
     }
 }

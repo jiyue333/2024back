@@ -1,6 +1,5 @@
 package com.cq.cd.interceptor;
 
-import com.cq.cd.util.JwtTokenUtil;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +26,10 @@ public class AdminInterceptor implements HandlerInterceptor {
 //			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 //			return false;
 //		}
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+		response.setHeader("Access-Control-Max-Age", "3600");
+		response.setHeader("Access-Control-Allow-Headers", "*");
 
 		// token 验证通过，继续执行后续的处理
 		return true;

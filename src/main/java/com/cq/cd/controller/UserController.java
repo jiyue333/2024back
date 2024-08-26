@@ -3,13 +3,13 @@ package com.cq.cd.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cq.cd.service.EmailService;
-import com.cq.cd.service.PostService;
-import com.cq.cd.util.ApiResult;
+import com.cq.cd.entity.Post;
+import com.cq.cd.entity.Review;
 import com.cq.cd.entity.User;
+import com.cq.cd.service.PostService;
+import com.cq.cd.service.ReviewService;
 import com.cq.cd.service.UserService;
 import com.cq.cd.util.ApiResult;
-import com.cq.cd.util.ErrorEnum;
 import com.cq.cd.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +24,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/user")
+@CrossOrigin
 public class UserController {
 
     @Autowired
@@ -35,8 +36,12 @@ public class UserController {
     @Autowired
     private PostService postService;
 
+    @Autowired
+    private ReviewService reviewService;
+
     /**
      * 分页查询所有用户
+     *
      * @param page 当前页码
      * @param size 每页大小
      * @return ApiResult 分页结果
@@ -67,31 +72,19 @@ public class UserController {
         }
     }
 
+
     /**
-     * 根据用户ID删除用户
-     * @param userId 用户ID
-     * @return ApiResult 删除结果
+     * 更新用户密码
+     *
+     * @param email       用户的邮箱，必须提供
+     * @param oldpassword 用户输入的原密码
+     * @param newpassword 用户输入的新密码
+     * @return ApiResult 更新结果
      */
-    @DeleteMapping("/{userId}")
-    public ApiResult deleteById(@PathVariable("userId") Integer userId) {
-        boolean res = userService.removeById(userId);
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("success", res);
-        return ApiResult.buildApiResult(200, "删除成功", resultMap);
-    }
-
-
-    /**
-    * 更新用户密码
-    * @param email 用户的邮箱，必须提供
-    * @param oldpassword 用户输入的原密码
-    * @param newpassword 用户输入的新密码
-    * @return ApiResult 更新结果
-    */
     @PutMapping("/password")
-     public ApiResult updatePwd(@RequestParam String email,
-                           @RequestParam String oldpassword,
-                           @RequestParam String newpassword){
+    public ApiResult updatePwd(@RequestParam(required = true) String email,
+                               @RequestParam(required = true) String oldpassword,
+                               @RequestParam(required = true) String newpassword) {
         // Step 1: 根据用户ID查询数据库中的用户信息
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.eq("email", email);
@@ -115,12 +108,15 @@ public class UserController {
 
     /**
      * 更新用户信息
-     * @param user 用户对象
+     *
+     * @param user 用户对象 必须包含用户名称
      * @return ApiResult 更新结果
      */
     @PutMapping("/")
     public ApiResult update(@RequestBody User user) {
-        boolean res = userService.updateById(user);
+        User user1 = userService.getuserbyName(user.getUserName());
+        user.setUserId(user1.getUserId());
+        Boolean res = userService.updateById(user);
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("success", res);
         if (res) {
@@ -130,33 +126,15 @@ public class UserController {
     }
 
     /**
-     * 添加新用户
-     * @param user 用户对象
-     * @return ApiResult 添加结果
-     */
-    @PostMapping("/")
-    public ApiResult add(@RequestBody User user) {
-        boolean res = userService.save(user);
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("success", res);
-        if (res) {
-            return ApiResult.buildApiResult(200, "添加成功", resultMap);
-        } else {
-            return ApiResult.buildApiResult(400, "添加失败", resultMap);
-        }
-    }
-
-    /**
      * 查询用户及其所有评论
+     *
      * @param userId 用户ID
      * @return User 用户对象
      */
     @GetMapping("/reviews")
-    public User selectAllReview(@RequestParam Integer userId) {
+    public User selectAllReview(@RequestParam(required = true) Integer userId) {
         return userService.selectAllReviews(userId);
     }
-
-
 
     /**
      * 用户登录
@@ -177,12 +155,13 @@ public class UserController {
 
     /**
      * 用户注册
+     *
      * @param user 用户信息
-     * @param  code 邮箱验证码
+     * @param code 邮箱验证码
      * @return ApiResult 注册结果
      */
     @PostMapping("/register")
-    public ApiResult register(@RequestBody User user, @RequestParam String code) {
+    public ApiResult register(@RequestBody User user, @RequestParam(required = true) String code) {
 
         // 校验验证码是否正确
         String storedCode = emailController.getCodeMap().get(user.getEmail()); // 获取存储的验证码
@@ -192,7 +171,7 @@ public class UserController {
         user.setUserCreatedData(LocalDate.now());
         user.setLastLogin(LocalDate.now());
         user.setPermissionCode("0001");
-        //todo添加用户头像
+        //todo 添加用户头像
         userService.save(user);
         String token = JwtTokenUtil.generateToken(user.getUserName());
         Map<String, Object> resultMap = new HashMap<>();
@@ -203,11 +182,12 @@ public class UserController {
 
     /**
      * 根据帖子ID删除帖子
-     * @param postId 帖子ID
+     *
+     * @param postId 帖子标题
      * @return ApiResult 删除结果
      */
-    @DeleteMapping("/delete/{postId}")
-    public ApiResult deletePostById(@PathVariable("postId") Integer postId) {
+    @DeleteMapping("/delete/post")
+    public ApiResult deletePostById(@RequestParam(required = true) Integer postId) {
         boolean res = postService.removeById(postId);
         Map<String, Object> data = new HashMap<>();
         data.put("success", res);
@@ -216,12 +196,70 @@ public class UserController {
 
     /**
      * 获取今日注册用户
+     *
      * @return ApiResult 返回数据
      */
     @GetMapping("/today")
-    public ApiResult testtime(){
-        Integer count =  userService.gettodayUser();
-        return  ApiResult.success().data("count", count);
+    public ApiResult testtime() {
+        Integer count = userService.gettodayUser();
+        return ApiResult.success().data("count", count);
+    }
+
+    /**
+     * 根据用户名称获取用户数据
+     *
+     * @param username 用户名称
+     * @return Apiresult 返回结果
+     */
+    @GetMapping("/username")
+    public ApiResult getuserbyname(@RequestParam(required = true) String username) {
+        User user = userService.getuserbyName(username);
+        return ApiResult.success().data("User", user);
+    }
+
+    /**
+     * 获取用户的帖子
+     *
+     * @param username 用户名称
+     * @return 帖子集合
+     */
+    @GetMapping("/post")
+    public ApiResult getuserpost(@RequestParam(required = true) String username) {
+        User user = userService.getuserbyName(username);
+        List<Post> posts = postService.getpostbyid(user.getUserId());
+        if (posts != null) {
+            return ApiResult.success().data("postList", posts);
+        } else {
+            return ApiResult.buildApiResult(400, "获取失败", null);
+        }
+    }
+
+    /**
+     * 根据关键字筛选评论
+     *
+     * @param keyword 关键字
+     * @return List<Review> 评论列表
+     */
+    @GetMapping("/search/keyword")
+    public ApiResult selectReviewsByKeyword(@RequestParam(required = true) String keyword) {
+        List<Review> reviews = reviewService.selectReviewsByKeyword(keyword);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("reviewlist", reviews);
+        return ApiResult.buildApiResult(200, "根据关键字筛选评论", resultMap);
+    }
+
+    /**
+     * 根据板块筛选评论
+     *
+     * @param boardId 板块ID
+     * @return List<Review> 评论列表
+     */
+    @GetMapping("/search/board")
+    public ApiResult selectReviewsByBoard(@RequestParam(required = true) Integer boardId) {
+        List<Review> reviews = reviewService.selectReviewsByBoard(boardId);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("reviewlist", reviews);
+        return ApiResult.buildApiResult(200, "根据板块筛选评论", resultMap);
     }
 
 }

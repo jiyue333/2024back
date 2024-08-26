@@ -1,21 +1,20 @@
 package com.cq.cd.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cq.cd.entity.Board;
+import com.cq.cd.entity.Post;
+import com.cq.cd.entity.Review;
 import com.cq.cd.entity.User;
 import com.cq.cd.service.BoardService;
+import com.cq.cd.service.PostService;
+import com.cq.cd.service.ReviewService;
 import com.cq.cd.service.UserService;
 import com.cq.cd.util.ApiResult;
-import com.cq.cd.entity.Post;
-import com.cq.cd.service.PostService;
-import com.cq.cd.util.ApiResult;
+import com.cq.cd.util.ErrorEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,49 +25,22 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/post")
+@CrossOrigin
 public class PostController {
 
     @Autowired
     private PostService postService;
-
     @Autowired
     private BoardService boardService;
-
     @Autowired
     private UserService userService;
+    @Autowired
+    private ReviewService reviewService;
 
-   /**
-     * 分页查询指定板块下的所有帖子
-     * @param boardName 板块名称
-     * @param page 当前页码
-     * @param size 每页大小
-     * @return ApiResult 分页结果
-     */
-    @GetMapping("/board/{boardName}/{page}/{size}")
-    public ApiResult findAllByBoardName(@PathVariable String boardName, @PathVariable Integer page, @PathVariable Integer size) {
-
-
-        Board board = boardService.getboardbyName(boardName);
-        if (board == null) {
-            return ApiResult.buildApiResult(404, "指定的板块不存在", null);
-        }
-
-        // 获取板块 ID
-        Integer boardId = board.getPlateId();
-
-        // 查询指定板块下的帖子
-        Page<Post> postPage = new Page<>(page, size);
-        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("boardId", boardId);  // 确保在数据库中有这个字段
-        IPage<Post> res = postService.page(postPage, queryWrapper);
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("posts", res);
-        return ApiResult.buildApiResult(200, "分页查询指定板块下的所有帖子", data);
-    }
 
     /**
      * 根据帖子ID查询帖子详情
+     *
      * @param postId 帖子ID
      * @return ApiResult 查询结果
      */
@@ -86,13 +58,14 @@ public class PostController {
 
     /**
      * 添加新帖子
-     * @param post 帖子对象
+     *
+     * @param post      帖子对象
      * @param boardName 板块名称
-     * @param userName 用户名称
+     * @param userName  用户名称
      * @return ApiResult 添加结果
      */
     @PostMapping("/add")
-    public ApiResult add(@RequestBody Post post, @RequestParam String boardName, @RequestParam String userName) {
+    public ApiResult add(@RequestBody Post post, @RequestParam(required = true) String boardName, @RequestParam(required = true) String userName) {
         // 查找板块ID
         Board board = boardService.getboardbyName(boardName);
         if (board == null) {
@@ -110,7 +83,7 @@ public class PostController {
         post.setUserId(user.getUserId());
 
         // 设置帖子创建时间
-        post.setPostCreatedData(LocalDate.now());
+        post.setPostCreatedData(LocalDateTime.now());
 
         // 保存帖子
         boolean res = postService.save(post);
@@ -125,16 +98,66 @@ public class PostController {
 
     /**
      * 根据标题或内容模糊查询帖子
+     *
      * @param keyword 关键词
      * @return ApiResult 查询结果
      */
     @GetMapping("/search")
-    public ApiResult searchPosts(@RequestParam String keyword) {
+    public ApiResult searchPosts(@RequestParam(required = true) String keyword) {
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.like("title", keyword).or().like("content", keyword);
+        queryWrapper.like("title", keyword).or().like("postContent", keyword);
         List<Post> res = postService.list(queryWrapper);
         Map<String, Object> data = new HashMap<>();
         data.put("posts", res);
         return ApiResult.buildApiResult(200, "模糊查询结果", data);
+    }
+
+
+    /**
+     * 获取帖子的评论信息，并增加帖子点击量
+     *
+     * @param postTitle 帖子标题
+     * @return ApiResult 包含帖子评论信息和更新后的点击量
+     */
+    @GetMapping("/detail")
+    public ApiResult getDetail(@RequestParam(required = true) String postTitle) {
+        Post post = postService.getpostbytitle(postTitle);
+        List<Review> list = reviewService.getbypostid(post.getPostId());
+
+        if (list != null) {
+            post.setClickNumber(post.getClickNumber() + 1);
+            Boolean res = postService.updateById(post);
+            return ApiResult.success().data("commentlist", list);
+        } else {
+            return ApiResult.error(ErrorEnum.E_400);
+        }
+    }
+
+    /**
+     * 点赞评论
+     *
+     * @param commentId 评论ID
+     * @return ApiResult 点赞结果
+     */
+    @PostMapping("/comments/{commentId}/like")
+    public ApiResult likeComment(@PathVariable Integer commentId) {
+        boolean result = reviewService.incrementCommentLikes(commentId);
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", result);
+        return ApiResult.buildApiResult(result ? 200 : 400, result ? "点赞成功" : "点赞失败", data);
+    }
+
+    /**
+     * 取消点赞评论
+     *
+     * @param commentId 评论ID
+     * @return ApiResult 取消点赞结果
+     */
+    @PostMapping("/comments/{commentId}/unlike")
+    public ApiResult unlikeComment(@PathVariable Integer commentId) {
+        boolean result = reviewService.decrementCommentLikes(commentId);
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", result);
+        return ApiResult.buildApiResult(result ? 200 : 400, result ? "取消点赞成功" : "取消点赞失败", data);
     }
 }

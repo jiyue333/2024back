@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cq.cd.entity.User;
 import org.apache.ibatis.annotations.*;
 
-import java.util.List;
-
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
@@ -21,7 +19,7 @@ public interface UserMapper extends BaseMapper<User> {
 	int Updatepwd(User user);
 
 
-	@Select("Select * from plate where userName = #{username}")
+	@Select("Select * from users where userName = #{username}")
 	User getuserbyName(String username);
 
 	@Select("select count(*) from users where DATE(userCreatedData)= CURDATE()")
