@@ -4,17 +4,17 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cq.cd.entity.Board;
 import com.cq.cd.entity.Post;
+import com.cq.cd.entity.Report;
 import com.cq.cd.entity.User;
-import com.cq.cd.service.BoardService;
-import com.cq.cd.service.PostService;
-import com.cq.cd.service.ReviewService;
-import com.cq.cd.service.UserService;
+import com.cq.cd.service.*;
 import com.cq.cd.util.ApiResult;
+import com.cq.cd.util.ErrorEnum;
 import com.cq.cd.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +38,8 @@ public class AdminController {
     private ReviewService reviewService;
     @Autowired
     private BoardService boardService;
+    @Autowired
+    private ReportService reportService;
 
 
     /**
@@ -91,22 +93,7 @@ public class AdminController {
         }
     }
 
-    /**
-     * 更新用户信息
-     * @param user 用户对象
-     * @return ApiResult 更新结果
-     */
-    @PutMapping("/users")
-    public ApiResult update(@RequestBody User user) {
-        boolean res = userService.updateById(user);
-        Map<String, Object> data = new HashMap<>();
-        data.put("success", res);
-        if (res) {
-            return ApiResult.buildApiResult(200, "更新成功", data);
-        } else {
-            return ApiResult.buildApiResult(400, "更新失败", data);
-        }
-    }
+
 
     /**
      * 添加新用户
@@ -167,7 +154,7 @@ public class AdminController {
     @PostMapping("/auth/login")
     public ApiResult authLogin(@RequestBody User user) {
         if (userService.authlogin(user)) {
-            String token = JwtTokenUtil.generateToken(user.getUserName());
+            String token = JwtTokenUtil.generateToken(user.getUserName(), user.getPermissionCode());
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("token", token);
             return ApiResult.buildApiResult(200, "认证登录成功", resultMap);
@@ -224,23 +211,6 @@ public class AdminController {
 
 
     /**
-     * 分页查询所有帖子
-     *
-     * @param page 当前页码
-     * @param size 每页大小
-     * @return ApiResult 分页结果
-     */
-    @GetMapping("/post/{page}/{size}")
-    public ApiResult findpost(@PathVariable Integer page, @PathVariable Integer size) {
-        Page<Post> postPage = new Page<>(page, size);
-        IPage<Post> res = postService.page(postPage);
-        Map<String, Object> data = new HashMap<>();
-        data.put("users", res);
-        return ApiResult.buildApiResult(200, "分页查询所有帖子", data);
-    }
-
-
-    /**
      * 更新板块信息
      *
      * @param board 帖子对象
@@ -255,5 +225,30 @@ public class AdminController {
             return ApiResult.buildApiResult(200, "更新成功", data);
         }
         return ApiResult.buildApiResult(400, "更新失败", data);
+    }
+
+    /**
+     * 获取举报信息
+     */
+    @GetMapping("/report")
+    public ApiResult getreport() {
+        List<Report> reportlist = reportService.list();
+        List<Report> reportList = new ArrayList<>();
+        for (Report report : reportlist) {
+            reportList.add(reportService.findDetail(report.getReportId()));
+        }
+        if (reportList != null) return ApiResult.success().data("ReportList", reportList);
+        else return ApiResult.error(ErrorEnum.E_90003);
+    }
+
+
+    /**
+     * 删除举报信息
+     */
+    @DeleteMapping("/report")
+    public ApiResult deletereport(@RequestParam Integer reportId) {
+        Boolean res = reportService.removeById(reportId);
+        if (res) return ApiResult.success();
+        else return ApiResult.error(ErrorEnum.E_90003);
     }
 }

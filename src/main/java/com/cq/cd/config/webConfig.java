@@ -6,9 +6,13 @@ import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.cq.cd.interceptor.AdminInterceptor;
 import com.cq.cd.interceptor.LoginInterceptor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -22,8 +26,11 @@ public class webConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/**");
-		registry.addInterceptor(new AdminInterceptor()).addPathPatterns("/api/admin/**");
+		registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/api/**")
+				.excludePathPatterns("/api/admin/auth/login", "/api/user/login", "/api/user/register");
+		registry.addInterceptor(new AdminInterceptor()).addPathPatterns("/api/admin/**")
+				.excludePathPatterns("/api/admin/auth/login", "/api/user/login");
+		;
 	}
 
 	/**
@@ -64,5 +71,16 @@ public class webConfig implements WebMvcConfigurer {
 	public void addResourceHandlers(ResourceHandlerRegistry register) {
 		register.addResourceHandler("/file/**") // 访问路径
 				.addResourceLocations("file:" + fileUrl); // 资源真实路径
+	}
+
+	@Bean
+	public CorsFilter corsFilter() {
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		CorsConfiguration corsConfiguration = new CorsConfiguration();
+		corsConfiguration.addAllowedOrigin("*");
+		corsConfiguration.addAllowedHeader("*");
+		corsConfiguration.addAllowedMethod("*");
+		source.registerCorsConfiguration("/**", corsConfiguration);
+		return new CorsFilter(source);
 	}
 }

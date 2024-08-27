@@ -1,5 +1,6 @@
 package com.cq.cd.interceptor;
 
+import com.cq.cd.util.JwtTokenUtil;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,21 +10,25 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 从请求头中获取 token
-//        String token = request.getHeader("Authorization");
-//
-//        // 如果没有传递 token，则返回 401 未授权
-//        if (token == null || token.isEmpty()) {
-//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//            return false;
-//        }
-//
-//        // 验证 token 是否有效
-//        Boolean isValid = JwtTokenUtil.validateToken(token);
-//
-//        if (!isValid) {
-//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//            return false;
-//        }
+        String token = request.getHeader("Authorization");
+        String prefix = "Bearer ";
+        if (token.startsWith(prefix)) {
+            System.out.println(prefix.length());
+            token = token.substring(prefix.length());
+        }
+        // 如果没有传递 token，则返回 401 未授权
+        if (token == null || token.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return false;
+        }
+
+        // 验证 token 是否有效
+        Boolean isValid = JwtTokenUtil.validateToken(token);
+
+        if (!isValid) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return false;
+        }
 
         return true;
     }

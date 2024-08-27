@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cq.cd.entity.Post;
+import com.cq.cd.entity.Report;
 import com.cq.cd.entity.Review;
 import com.cq.cd.entity.User;
 import com.cq.cd.service.PostService;
+import com.cq.cd.service.ReportService;
 import com.cq.cd.service.ReviewService;
 import com.cq.cd.service.UserService;
 import com.cq.cd.util.ApiResult;
@@ -29,15 +31,14 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
     @Autowired
     private EmailController emailController;
-
     @Autowired
     private PostService postService;
-
     @Autowired
     private ReviewService reviewService;
+    @Autowired
+    private ReportService reportService;
 
     /**
      * 分页查询所有用户
@@ -115,6 +116,7 @@ public class UserController {
     @PutMapping("/")
     public ApiResult update(@RequestBody User user) {
         User user1 = userService.getuserbyName(user.getUserName());
+        if (user1 == null) return ApiResult.buildApiResult(400, "未找到该用户", null);
         user.setUserId(user1.getUserId());
         Boolean res = userService.updateById(user);
         Map<String, Object> resultMap = new HashMap<>();
@@ -144,7 +146,7 @@ public class UserController {
     @PostMapping("/login")
     public ApiResult login(@RequestBody User user) {
         if (userService.login(user)) {
-            String token = JwtTokenUtil.generateToken(user.getUserName());
+            String token = JwtTokenUtil.generateToken(user.getUserName(), user.getPermissionCode());
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("token", token);
             return ApiResult.buildApiResult(200, "登录成功", resultMap);
@@ -157,15 +159,14 @@ public class UserController {
      * 用户注册
      *
      * @param user 用户信息
-     * @param code 邮箱验证码
      * @return ApiResult 注册结果
      */
     @PostMapping("/register")
-    public ApiResult register(@RequestBody User user, @RequestParam(required = true) String code) {
+    public ApiResult register(@RequestBody User user) {
 
         // 校验验证码是否正确
         String storedCode = emailController.getCodeMap().get(user.getEmail()); // 获取存储的验证码
-        if (storedCode == null || !storedCode.equals(code) || emailController.isCodeExpired(user.getEmail())) {
+        if (storedCode == null || !storedCode.equals(user.getCode()) || emailController.isCodeExpired(user.getEmail())) {
             return ApiResult.buildApiResult(400, "验证码不正确或已过期", null);
         }
         user.setUserCreatedData(LocalDate.now());
@@ -173,7 +174,7 @@ public class UserController {
         user.setPermissionCode("0001");
         //todo 添加用户头像
         userService.save(user);
-        String token = JwtTokenUtil.generateToken(user.getUserName());
+        String token = JwtTokenUtil.generateToken(user.getUserName(), user.getPermissionCode());
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("token", token);
         return ApiResult.buildApiResult(200, "注册成功", resultMap);
@@ -262,4 +263,49 @@ public class UserController {
         return ApiResult.buildApiResult(200, "根据板块筛选评论", resultMap);
     }
 
+    /**
+     * 添加举报功能
+     *
+     * @param report 举报信息
+     * @return ApiResult 返回操作结果
+     */
+    @PutMapping("/report")
+    public ApiResult addReport(@RequestBody Report report) {
+        boolean res = reportService.save(report);
+        if (res) {
+            return ApiResult.buildApiResult(200, "举报成功", null);
+        } else {
+            return ApiResult.buildApiResult(400, "举报失败", null);
+        }
+    }
+
+    /**
+     * 根据邮箱获取个人信息
+     */
+    @GetMapping("email")
+    public ApiResult getbyemail(@RequestParam String email) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("email", email);
+        User user = userService.getOne(queryWrapper, false);
+        if (user != null) return ApiResult.success().data("user", user);
+        else return ApiResult.buildApiResult(400, "未找到用户", null);
+    }
+
+    @GetMapping("/visible")
+    public ApiResult whetherVisible(@RequestBody(required = true) String setCode, @RequestBody User user) {
+        int[] intCode = new int[4];
+        for (int i = 0; i < 4; i++) {
+            char ch = setCode.charAt(i);
+            intCode[i] = Character.getNumericValue(ch);
+        }
+        User user0 = userService.getById(user.getUserId());
+        user0.setVisible(intCode[1]);
+        user0.setChat(intCode[3]);
+        boolean result = userService.updateById(user0);
+        if (result) {
+            return ApiResult.buildApiResult(200, "设置成功", null);
+        } else {
+            return ApiResult.buildApiResult(400, "设置失败", null);
+        }
+    }
 }

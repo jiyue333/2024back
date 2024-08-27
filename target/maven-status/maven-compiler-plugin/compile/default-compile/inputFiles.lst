@@ -1,7 +1,6 @@
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\entity\Review.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\controller\BoardController.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\mapper\BoardMapper.java
-D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\config\fastJsonConfig.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\controller\PostController.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\config\webConfig.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\MavenProjectApplication.java
@@ -13,8 +12,10 @@ D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\controller\UserControlle
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\interceptor\LoginInterceptor.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\UserService.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\entity\Board.java
+D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\mapper\ReportMapper.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\controller\ReviewController.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\Impl\MessageServiceImpl.java
+D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\Impl\ReportServiceImpl.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\controller\FileController.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\ReviewService.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\util\ErrorEnum.java
@@ -28,16 +29,16 @@ D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\util\JwtTokenUtil.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\EmailService.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\controller\AdminController.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\controller\EmailController.java
+D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\ReportService.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\mapper\PostMapper.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\Impl\EmailServiceimpl.java
-D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\entity\Login.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\util\ApiResult.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\config\MyBatisPlusConfig.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\mapper\MessageMapper.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\util\ParamController.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\Impl\PostServiceImpl.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\BoardService.java
-D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\config\FileConfig.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\entity\Message.java
+D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\entity\Report.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\Impl\UserServiceImpl.java
 D:\mavenProject\mavenproject820\src\main\java\com\cq\cd\service\PostService.java

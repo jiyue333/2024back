@@ -1,10 +1,11 @@
 package com.cq.cd.util;
 
 import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtTokenUtil {
@@ -14,7 +15,9 @@ public class JwtTokenUtil {
 	private static long expiration = 604800;
 
 	// 生成JWT令牌
-	public static String generateToken(String username) {
+	public static String generateToken(String username, String role) {
+		Map<String, Object> claims = new HashMap<>();
+		claims.put("role", role); // 添加角色信息到claims中
 		return Jwts.builder()
 				.setHeaderParam("type", "JWT")
 				.setSubject(username) // 设置令牌的主体（用户名）
@@ -25,8 +28,8 @@ public class JwtTokenUtil {
 	}
 
 	// 从JWT中获取用户名
-	public static Claims getUsernameFromToken(String token) {
-		return	 Jwts.parser()
+	public static Claims getclaims(String token) {
+		return Jwts.parser()
 				.setSigningKey(secret) // 设置用于解析的密钥
 				.parseClaimsJws(token) // 解析令牌
 				.getBody();

@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 
 @Data
@@ -28,6 +27,12 @@ public class User  {
 
     @TableField(exist = false)
     private List<Review> Reviews;
+
+    @TableField(exist = false)
+    private String code;
+
+    private Integer visible;
+    private Integer chat;
 
 //    @TableField(exist = false)
 //    private final Collection<? extends GrantedAuthority> authorities;

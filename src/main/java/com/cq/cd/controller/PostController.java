@@ -1,6 +1,8 @@
 package com.cq.cd.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cq.cd.entity.Board;
 import com.cq.cd.entity.Post;
 import com.cq.cd.entity.Review;
@@ -72,6 +74,9 @@ public class PostController {
             return ApiResult.buildApiResult(400, "指定的板块不存在", null);
         }
 
+        board.setPostsNumber(board.getPostsNumber() + 1);
+        Boolean updated = boardService.updateById(board);
+
         // 查找用户ID
         User user = userService.getuserbyName(userName);
         if (user == null) {
@@ -116,12 +121,12 @@ public class PostController {
     /**
      * 获取帖子的评论信息，并增加帖子点击量
      *
-     * @param postTitle 帖子标题
+     * @param postId 帖子ID
      * @return ApiResult 包含帖子评论信息和更新后的点击量
      */
     @GetMapping("/detail")
-    public ApiResult getDetail(@RequestParam(required = true) String postTitle) {
-        Post post = postService.getpostbytitle(postTitle);
+    public ApiResult getDetail(@RequestParam(required = true) String postId) {
+        Post post = postService.getById(postId);
         List<Review> list = reviewService.getbypostid(post.getPostId());
 
         if (list != null) {
@@ -159,5 +164,41 @@ public class PostController {
         Map<String, Object> data = new HashMap<>();
         data.put("success", result);
         return ApiResult.buildApiResult(result ? 200 : 400, result ? "取消点赞成功" : "取消点赞失败", data);
+    }
+
+
+    /**
+     * 分页查询所有帖子
+     *
+     * @param page 当前页码
+     * @param size 每页大小
+     * @return ApiResult 分页结果
+     */
+    @GetMapping("/post/{page}/{size}")
+    public ApiResult findpost(@PathVariable Integer page, @PathVariable Integer size) {
+        Page<Post> postPage = new Page<>(page, size);
+        IPage<Post> res = postService.page(postPage);
+        Map<String, Object> data = new HashMap<>();
+        data.put("users", res);
+        return ApiResult.buildApiResult(200, "分页查询所有帖子", data);
+    }
+
+    /**
+     * 查询最热的帖子
+     *
+     * @param page 当前页码
+     * @param size 每页大小
+     * @return ApiResult 分页结果
+     */
+    @GetMapping("/post/hot/{page}/{size}")
+    public ApiResult findhotpost(@PathVariable Integer page, @PathVariable Integer size) {
+        Page<Post> postPage = new Page<>(page, size);
+        // 构造查询条件，按 clickNumber 倒序排列
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("clickNumber");
+        IPage<Post> res = postService.page(postPage, queryWrapper);
+        Map<String, Object> data = new HashMap<>();
+        data.put("posts", res);
+        return ApiResult.buildApiResult(200, "分页查询最热帖子", data);
     }
 }

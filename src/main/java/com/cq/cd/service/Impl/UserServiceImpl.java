@@ -2,8 +2,8 @@ package com.cq.cd.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cq.cd.mapper.UserMapper;
 import com.cq.cd.entity.User;
+import com.cq.cd.mapper.UserMapper;
 import com.cq.cd.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 	private UserMapper userMapper;
 
 
-	public static final String permissioncode = "1000";
+	public static final String permissioncode = "1111";
 
 	@Override
 	public User selectAllReviews(Integer userId) {
@@ -59,7 +59,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		String username = user.getUserName();
 		String password = user.getPassWord();
 		String email = user.getEmail();
-
 		QueryWrapper<User> queryWrapper = new QueryWrapper<>();
 		// 根据用户名或邮箱进行查询
 		if (username != null && !username.isEmpty()) {

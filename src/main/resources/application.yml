@@ -10,11 +10,17 @@ spring:
     username: 2494091497@qq.com
     password: qblfldvnicuiebcd
     default-encoding: utf-8
+    enable: true
+    port: 465
+    socketFactory:
+      port: 465
+      class: javax.net.ssl.SSLSocketFactory
+      fallback: false
 
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.commons.JakartaCommonsLoggingImpl
-    map-underscore-to-camel-case: false #关闭驼峰转换
+    map-underscore-to-camel-case: false #
 server:
   port: 443
 

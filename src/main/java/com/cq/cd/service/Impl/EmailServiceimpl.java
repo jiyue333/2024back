@@ -35,8 +35,8 @@ public class EmailServiceimpl implements EmailService {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-            helper.setSubject("【POLAR】验证码"); // 邮件的标题
-            helper.setFrom(username); // 发送者
+            helper.setSubject("注册验证码"); // 邮件的标题
+            helper.setFrom(username);
             helper.setTo(email); // 接收者
             helper.setSentDate(new Date()); // 时间
             helper.setText(process, true); // 第二个参数true表示这是一个html文本

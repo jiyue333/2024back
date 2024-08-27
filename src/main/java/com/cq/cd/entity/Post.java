@@ -23,4 +23,5 @@ public class Post {
 	private Integer clickNumber;
 	private Integer commentNumber;
 	private Integer postLikeNumber;
+	private String postPicture;
 }
